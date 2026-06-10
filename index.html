@@ -1260,12 +1260,10 @@ async function enviarASheets(tipo, data) {
   const url = state.scriptUrl;
   if (!url) return false;
   try {
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo, ...data })
-    });
+    // Codificar como parámetros GET — funciona sin restricciones CORS
+    const payload = encodeURIComponent(JSON.stringify({ tipo, ...data }));
+    const fullUrl = url + '?payload=' + payload;
+    await fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
     // Marcar como sincronizado
     const arr = tipo === 'egreso' ? state.egresos : tipo === 'jornal' ? state.jornales : state.ingresos;
     const idx = arr.findIndex(r => r.id === data.id);
