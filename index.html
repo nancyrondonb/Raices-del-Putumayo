@@ -411,7 +411,7 @@
   <div class="tab" data-page="jornales"  onclick="switchPage('jornales')"><span class="tab-icon">👷</span> Jornales</div>
   <div class="tab" data-page="ingresos"  onclick="switchPage('ingresos')"><span class="tab-icon">💰</span> Ingresos</div>
   <div class="tab" data-page="socios"    onclick="switchPage('socios')"><span class="tab-icon">👥</span> Socios</div>
-  <div class="tab" data-page="config"    onclick="switchPage('config')"><span class="tab-icon">⚙️</span> Config</div>
+
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -489,9 +489,7 @@
         <option value="">— Seleccionar —</option>
         <option>Abono orgánico</option>
         <option>Fertilizante químico</option>
-        <option>Fungicida</option>
-        <option>Herbicida</option>
-        <option>Insecticida</option>
+        <option>Fungicida / Herbicida / Insecticida</option>
         <option>Maquinaria - compra</option>
         <option>Maquinaria - arriendo</option>
         <option>Herramientas</option>
@@ -701,8 +699,18 @@
      PÁGINA: SOCIOS
 ══════════════════════════════════════════════ -->
 <div class="page" id="page-socios">
-  <div class="eyebrow">Balance individual</div>
+  <div class="eyebrow">Resumen por socio</div>
   <div id="sociosDetalle"></div>
+</div>
+
+<!-- Modal detalle socio -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitulo">Detalle</div>
+    <div id="modalContenido"></div>
+    <button class="btn-secondary" style="margin-top:8px" onclick="cerrarModal()">✕ Cerrar</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -1096,57 +1104,109 @@ function limpiarIngreso() {
 }
 
 // ══════════════════════════════════════════════
-// SOCIOS DETALLE
+// SOCIOS — GASTOS Y JORNALES CON DETALLE
 // ══════════════════════════════════════════════
 function renderSocios() {
-  const totIng = state.ingresos.reduce((s, r) => s + (r.total || 0), 0);
-  const totEg  = state.egresos.reduce((s, r) => s + (r.valor || 0), 0);
-  const totJor = state.jornales.reduce((s, r) => s + (r.total || 0), 0);
-
   const div = document.getElementById('sociosDetalle');
   div.innerHTML = SOCIOS.map(s => {
-    const aporteDinero  = state.egresos.filter(e => e.socio === s.nombre).reduce((a, e) => a + (e.valor||0), 0);
-    const aporteJornal  = state.jornales.filter(j => j.tipo === s.nombre).reduce((a, j) => a + (j.total||0), 0);
-    const parteIngresos = totIng * s.pct;
-    const gastoProp     = (totEg + totJor) * s.pct;
-    const balance       = parteIngresos + aporteDinero + aporteJornal - gastoProp;
-    const pct = Math.round(s.pct * 100);
-    const balColor = balance > 0 ? 'var(--verde)' : balance < 0 ? 'var(--rojo)' : 'var(--gris-text)';
+    const gastosSocio   = state.egresos.filter(e => e.socio === s.nombre);
+    const totalGastos   = gastosSocio.reduce((a,e) => a+(e.valor||0), 0);
+    const jornalesSocio = state.jornales.filter(j => j.quien_pago === s.nombre);
+    const totalJornales = jornalesSocio.reduce((a,j) => a+(j.total||0), 0);
 
     return `<div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div class="socio-init" style="width:44px;height:44px;font-size:15px">${s.initials}</div>
-        <div>
-          <div style="font-weight:800;font-size:15px">${s.nombre}</div>
-          <div style="font-size:12px;color:var(--gris-text)">${pct}% de participación</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="socio-init" style="width:40px;height:40px;font-size:14px">${s.initials}</div>
+        <div style="font-weight:800;font-size:14px;line-height:1.3">${s.nombre}</div>
+      </div>
+
+      <div style="background:var(--naranja-cl);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:0.5px">💸 Gastos pagados</div>
+            <div style="font-size:22px;font-weight:900;color:var(--naranja);letter-spacing:-1px;margin-top:2px">${fmt(totalGastos)}</div>
+            <div style="font-size:11px;color:var(--naranja);margin-top:1px">${gastosSocio.length} registro(s)</div>
+          </div>
+          ${gastosSocio.length > 0
+            ? `<button onclick="verDetalle('gastos','${s.nombre}')" style="background:var(--naranja);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">Ver detalle</button>`
+            : `<span style="font-size:12px;color:var(--gris-text)">Sin registros</span>`}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--naranja-cl);border-radius:10px;padding:10px 12px">
-          <div style="font-size:10px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:0.4px">Aportes dinero</div>
-          <div style="font-size:16px;font-weight:800;color:var(--naranja);margin-top:2px">${fmtK(aporteDinero)}</div>
+
+      <div style="background:var(--azul-cl);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:0.5px">👷 Jornales pagados</div>
+            <div style="font-size:22px;font-weight:900;color:var(--azul);letter-spacing:-1px;margin-top:2px">${fmt(totalJornales)}</div>
+            <div style="font-size:11px;color:var(--azul);margin-top:1px">${jornalesSocio.length} jornal(es)</div>
+          </div>
+          ${jornalesSocio.length > 0
+            ? `<button onclick="verDetalle('jornales','${s.nombre}')" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">Ver detalle</button>`
+            : `<span style="font-size:12px;color:var(--gris-text)">Sin registros</span>`}
         </div>
-        <div style="background:var(--azul-cl);border-radius:10px;padding:10px 12px">
-          <div style="font-size:10px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:0.4px">Trabajo aportado</div>
-          <div style="font-size:16px;font-weight:800;color:var(--azul);margin-top:2px">${fmtK(aporteJornal)}</div>
-        </div>
-        <div style="background:var(--verde-claro);border-radius:10px;padding:10px 12px">
-          <div style="font-size:10px;font-weight:700;color:var(--verde);text-transform:uppercase;letter-spacing:0.4px">Parte ingresos</div>
-          <div style="font-size:16px;font-weight:800;color:var(--verde);margin-top:2px">${fmtK(parteIngresos)}</div>
-        </div>
-        <div style="background:var(--morado-cl);border-radius:10px;padding:10px 12px">
-          <div style="font-size:10px;font-weight:700;color:var(--morado);text-transform:uppercase;letter-spacing:0.4px">Gasto proporcional</div>
-          <div style="font-size:16px;font-weight:800;color:var(--morado);margin-top:2px">${fmtK(gastoProp)}</div>
-        </div>
-      </div>
-      <div style="background:${balance>0?'var(--verde-claro)':balance<0?'var(--rojo-cl)':'var(--gris-1)'};border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;font-weight:700;color:${balColor}">Balance final</span>
-        <span style="font-size:22px;font-weight:900;color:${balColor};letter-spacing:-1px">${fmt(balance)}</span>
       </div>
     </div>`;
   }).join('');
 }
 
+function verDetalle(tipo, nombreSocio) {
+  const nombre2 = nombreSocio.split(' ').slice(0,2).join(' ');
+
+  if (tipo === 'gastos') {
+    const items = state.egresos
+      .filter(e => e.socio === nombreSocio)
+      .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    document.getElementById('modalTitulo').textContent = '💸 Gastos — ' + nombre2;
+    document.getElementById('modalContenido').innerHTML = items.length === 0
+      ? '<p style="color:var(--gris-text);text-align:center;padding:20px">Sin registros</p>'
+      : items.map(e => `
+        <div style="border-bottom:1px solid var(--gris-2);padding:12px 0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px">${e.desc}</div>
+              <div style="font-size:12px;color:var(--gris-text);margin-top:3px">📅 ${e.fecha} &nbsp;·&nbsp; 🏷️ ${e.cat}</div>
+              ${e.obs ? `<div style="font-size:11px;color:var(--gris-text);margin-top:2px;font-style:italic">📝 ${e.obs}</div>` : ''}
+            </div>
+            <div style="font-size:16px;font-weight:800;color:var(--naranja);margin-left:12px;white-space:nowrap">${fmt(e.valor)}</div>
+          </div>
+        </div>`).join('')
+      + `<div style="background:var(--naranja-cl);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between">
+           <span style="font-weight:700;color:var(--naranja)">TOTAL</span>
+           <span style="font-weight:900;font-size:16px;color:var(--naranja)">${fmt(items.reduce((a,e)=>a+(e.valor||0),0))}</span>
+         </div>`;
+  }
+
+  if (tipo === 'jornales') {
+    const items = state.jornales
+      .filter(j => j.quien_pago === nombreSocio)
+      .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    document.getElementById('modalTitulo').textContent = '👷 Jornales — ' + nombre2;
+    document.getElementById('modalContenido').innerHTML = items.length === 0
+      ? '<p style="color:var(--gris-text);text-align:center;padding:20px">Sin registros</p>'
+      : items.map(j => `
+        <div style="border-bottom:1px solid var(--gris-2);padding:12px 0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px">${j.nombre}</div>
+              <div style="font-size:12px;color:var(--gris-text);margin-top:3px">📅 ${j.fecha} &nbsp;·&nbsp; 🔨 ${j.labor}</div>
+              <div style="font-size:12px;color:var(--gris-text);margin-top:2px">${j.dias} día(s) × ${fmt(j.valdia)}/día</div>
+              ${j.obs ? `<div style="font-size:11px;color:var(--gris-text);margin-top:2px;font-style:italic">📝 ${j.obs}</div>` : ''}
+            </div>
+            <div style="font-size:16px;font-weight:800;color:var(--azul);margin-left:12px;white-space:nowrap">${fmt(j.total)}</div>
+          </div>
+        </div>`).join('')
+      + `<div style="background:var(--azul-cl);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between">
+           <span style="font-weight:700;color:var(--azul)">TOTAL</span>
+           <span style="font-weight:900;font-size:16px;color:var(--azul)">${fmt(items.reduce((a,j)=>a+(j.total||0),0))}</span>
+         </div>`;
+  }
+
+  document.getElementById('modalDetalle').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modalDetalle').classList.remove('open');
+}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
