@@ -398,9 +398,9 @@
       <div class="header-logo">🌿 Raíces del Putumayo</div>
       <div class="header-sub">Asoc. Agroalimentaria · Vda. Los Nogales · Orito, Putumayo</div>
     </div>
-    <button class="sync-btn" onclick="syncSheets()">
+    <button class="sync-btn" onclick="cargarDesdeSheet()">
       <span class="sync-dot" id="syncDot"></span>
-      <span id="syncTxt">Sincronizar</span>
+      <span id="syncTxt">Actualizar</span>
     </button>
   </div>
 </div>
@@ -1279,56 +1279,59 @@ function confirmarLimpiar() {
 // ══════════════════════════════════════════════
 // SYNC GOOGLE SHEETS
 // ══════════════════════════════════════════════
-function sincronizarPendientes() { syncSheets(); }
-
-async function syncSheets() {
-  const url = state.scriptUrl;
-  if (!url) {
-    toast('Configura primero el Apps Script en ⚙️ Config', 'rojo');
-    return;
-  }
-  document.getElementById('syncTxt').textContent = 'Enviando...';
-  document.getElementById('syncDot').style.background = '#FFF';
-
-  const pendientes = [
-    ...state.egresos.filter(e => !e.sincronizado).map(e => ({tipo:'egreso', data: e})),
-    ...state.jornales.filter(j => !j.sincronizado).map(j => ({tipo:'jornal', data: j})),
-    ...state.ingresos.filter(i => !i.sincronizado).map(i => ({tipo:'ingreso', data: i})),
-  ];
-
-  if (!pendientes.length) {
-    toast('Todo está sincronizado ✓', 'verde');
-    document.getElementById('syncTxt').textContent = 'Sincronizar';
-    document.getElementById('syncDot').style.background = 'var(--amarillo)';
-    return;
-  }
-
-  let ok = 0;
-  for (const p of pendientes) {
-    const resultado = await enviarASheets(p.tipo, p.data);
-    if (resultado) ok++;
-  }
-
-  document.getElementById('syncTxt').textContent = 'Sincronizar';
-  document.getElementById('syncDot').style.background = ok === pendientes.length ? '#4ade80' : 'var(--amarillo)';
-  toast(`${ok}/${pendientes.length} registros enviados a Sheets`, ok === pendientes.length ? 'verde' : '');
-}
+// Función legacy mantenida por compatibilidad con botón Config
+function sincronizarPendientes() { cargarDesdeSheet(); }
 
 async function enviarASheets(tipo, data) {
   const url = state.scriptUrl;
   if (!url) return false;
   try {
-    // Codificar como parámetros GET — funciona sin restricciones CORS
     const payload = encodeURIComponent(JSON.stringify({ tipo, ...data }));
     const fullUrl = url + '?payload=' + payload;
     await fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
-    // Marcar como sincronizado
-    const arr = tipo === 'egreso' ? state.egresos : tipo === 'jornal' ? state.jornales : state.ingresos;
-    const idx = arr.findIndex(r => r.id === data.id);
-    if (idx >= 0) arr[idx].sincronizado = true;
-    saveState();
+    // Esperar 1.5s para que Sheets termine de escribir, luego recargar
+    setTimeout(() => cargarDesdeSheet(true), 1500);
     return true;
   } catch(e) { return false; }
+}
+
+// ══════════════════════════════════════════════
+// CARGAR DESDE GOOGLE SHEETS — fuente única de verdad
+// ══════════════════════════════════════════════
+async function cargarDesdeSheet(silencioso) {
+  const url = state.scriptUrl;
+  if (!url) {
+    if (!silencioso) toast('No hay conexión configurada', 'rojo');
+    return;
+  }
+  document.getElementById('syncTxt').textContent = 'Cargando...';
+  document.getElementById('syncDot').style.background = '#FFF';
+
+  try {
+    // Llamar al endpoint con action=read
+    const respUrl = url + '?action=read&_=' + Date.now();
+    const resp = await fetch(respUrl);
+    if (!resp.ok) throw new Error('Error de red');
+    const datos = await resp.json();
+
+    state.egresos  = (datos.egresos  || []).map(r => ({ ...r, sincronizado: true }));
+    state.jornales = (datos.jornales || []).map(r => ({ ...r, sincronizado: true }));
+    state.ingresos = (datos.ingresos || []).map(r => ({ ...r, sincronizado: true }));
+    saveState();
+
+    renderListaEgresos();
+    renderListaJornales();
+    renderListaIngresos();
+    if (document.getElementById('page-socios').classList.contains('active')) renderSocios();
+
+    document.getElementById('syncTxt').textContent = 'Actualizar';
+    document.getElementById('syncDot').style.background = '#4ade80';
+    if (!silencioso) toast('Datos actualizados ✓', 'verde');
+  } catch(e) {
+    document.getElementById('syncTxt').textContent = 'Actualizar';
+    document.getElementById('syncDot').style.background = 'var(--amarillo)';
+    if (!silencioso) toast('No se pudo cargar', 'rojo');
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1450,13 +1453,18 @@ function init() {
   document.getElementById('jor-valdia').value = 50000;
   calcJornal();
 
+  // Mostrar datos guardados localmente primero (carga instantánea)
   renderListaEgresos();
   renderListaJornales();
   renderListaIngresos();
-  // Arrancar en pestaña Gastos
+
+  // Activar pestaña Gastos
   document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
   const bnavEg = document.getElementById('bnav-egresos');
   if (bnavEg) bnavEg.classList.add('active');
+
+  // Cargar datos frescos desde Google Sheets (fuente única de verdad)
+  cargarDesdeSheet(true);
 }
 
 init();
