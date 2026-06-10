@@ -740,9 +740,9 @@
       <span class="step-text">Autoriza los permisos → copia la <strong>URL de la aplicación web</strong> y pégala aquí:</span>
     </div>
 
-    <div class="form-group" style="margin-top:8px">
-      <label class="form-label">URL del Apps Script</label>
-      <input type="url" class="form-input" id="cfg-url" placeholder="https://script.google.com/macros/s/..." oninput="guardarConfig()">
+    <div style="background:var(--verde-claro);border:1.5px solid var(--verde-borde);border-radius:var(--radio);padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--verde);margin-bottom:4px">✅ Script conectado automáticamente</div>
+      <div style="font-size:11px;color:var(--gris-text);word-break:break-all">No necesitas configurar nada — la conexión ya está activa en todos los dispositivos.</div>
     </div>
 
     <div id="cfg-status" style="font-size:13px; color:var(--gris-text); margin-bottom:14px; min-height:18px;"></div>
@@ -810,7 +810,7 @@ let state = {
   egresos:  [],
   jornales: [],
   ingresos: [],
-  scriptUrl: ''
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzXUeTj_AFnL4-r8YzT0fCfTDxrk3vCIRVOpI8kiH4Ei7_vBcv8_LS9yBbDf8DgLnAJ/exec'
 };
 
 // Cargar estado guardado
@@ -819,9 +819,11 @@ function loadState() {
     const saved = localStorage.getItem('finca_state');
     if (saved) state = { ...state, ...JSON.parse(saved) };
   } catch(e) {}
-  if (!state.egresos)  state.egresos  = [];
-  if (!state.jornales) state.jornales = [];
-  if (!state.ingresos) state.ingresos = [];
+  if (!state.egresos)   state.egresos  = [];
+  if (!state.jornales)  state.jornales = [];
+  if (!state.ingresos)  state.ingresos = [];
+  // URL siempre fija — no depende de configuración manual
+  state.scriptUrl = 'https://script.google.com/macros/s/AKfycbzXUeTj_AFnL4-r8YzT0fCfTDxrk3vCIRVOpI8kiH4Ei7_vBcv8_LS9yBbDf8DgLnAJ/exec';
 }
 
 function saveState() {
@@ -1149,10 +1151,6 @@ function renderSocios() {
 // CONFIG
 // ══════════════════════════════════════════════
 function renderConfig() {
-  // URL guardada
-  const urlInp = document.getElementById('cfg-url');
-  urlInp.value = state.scriptUrl || '';
-
   // Conteos
   document.getElementById('cfg-counts').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
@@ -1187,7 +1185,7 @@ function renderConfig() {
 }
 
 function guardarConfig() {
-  state.scriptUrl = document.getElementById('cfg-url').value.trim();
+  // URL fija en el código — no se modifica
   saveState();
 }
 
