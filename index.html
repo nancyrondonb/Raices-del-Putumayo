@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Raíces del Putumayo</title>
+<style>
+  /* ── TOKENS ─────────────────────────────────────────── */
+  :root {
+    --verde:       #1B6B3A;
+    --verde-med:   #2D9E57;
+    --verde-claro: #E8F5EE;
+    --verde-borde: #A8D5B8;
+    --naranja:     #D4691E;
+    --naranja-cl:  #FDF0E8;
+    --amarillo:    #F5C842;
+    --azul:        #1A6FA8;
+    --azul-cl:     #E8F3FB;
+    --morado:      #6B3FA0;
+    --morado-cl:   #F0EBFA;
+    --rojo:        #C0392B;
+    --rojo-cl:     #FDECEC;
+    --gris-1:      #F7F7F5;
+    --gris-2:      #EDEDE9;
+    --gris-3:      #C8C8C0;
+    --gris-text:   #6B6B60;
+    --texto:       #1A1A16;
+    --blanco:      #FFFFFF;
+    --radio:       12px;
+    --radio-lg:    18px;
+    --sombra:      0 2px 12px rgba(0,0,0,0.09);
+    --sombra-lg:   0 4px 24px rgba(0,0,0,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gris-1);
+    color: var(--texto);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────── */
+  .header {
+    background: var(--verde);
+    color: var(--blanco);
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--sombra);
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .header-logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+  .header-sub { font-size: 11px; opacity: 0.75; margin-top: 2px; letter-spacing: 0.3px; }
+  .sync-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: background 0.2s;
+  }
+  .sync-btn:active { background: rgba(255,255,255,0.25); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amarillo); }
+
+  /* ── NAV TABS ────────────────────────────────────────── */
+  .nav-tabs {
+    display: flex;
+    background: var(--blanco);
+    border-bottom: 2px solid var(--gris-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gris-text);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tab.active { color: var(--verde); border-bottom-color: var(--verde); }
+  .tab-icon { font-size: 16px; }
+
+  /* ── PAGES ───────────────────────────────────────────── */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* ── CARDS ───────────────────────────────────────────── */
+  .card {
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gris-text);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-title-icon { font-size: 16px; }
+
+  /* ── DASHBOARD KPIs ──────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .kpi {
+    background: var(--blanco);
+    border-radius: var(--radio);
+    padding: 14px;
+    box-shadow: var(--sombra);
+    border-left: 4px solid var(--gris-3);
+  }
+  .kpi.ing  { border-left-color: var(--verde-med); }
+  .kpi.eg   { border-left-color: var(--naranja); }
+  .kpi.jor  { border-left-color: var(--azul); }
+  .kpi.util { border-left-color: var(--amarillo); }
+  .kpi-label { font-size: 11px; color: var(--gris-text); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-val { font-size: 20px; font-weight: 800; margin-top: 4px; letter-spacing: -0.5px; }
+  .kpi.ing  .kpi-val { color: var(--verde); }
+  .kpi.eg   .kpi-val { color: var(--naranja); }
+  .kpi.jor  .kpi-val { color: var(--azul); }
+  .kpi.util .kpi-val { color: var(--verde); }
+
+  /* ── BALANCE TABLE ───────────────────────────────────── */
+  .balance-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .balance-table th {
+    text-align: left; padding: 8px 6px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px; color: var(--gris-text);
+    border-bottom: 2px solid var(--gris-2);
+  }
+  .balance-table td { padding: 10px 6px; border-bottom: 1px solid var(--gris-2); vertical-align: middle; }
+  .balance-table tr:last-child td { border-bottom: none; }
+  .socio-init {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--verde-claro);
+    color: var(--verde); font-weight: 800; font-size: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .socio-name { font-weight: 600; font-size: 12px; }
+  .socio-role { font-size: 11px; color: var(--gris-text); }
+  .balance-pos { color: var(--verde); font-weight: 700; }
+  .balance-neg { color: var(--rojo); font-weight: 700; }
+  .balance-zero { color: var(--gris-text); font-weight: 600; }
+
+  /* ── FORMS ───────────────────────────────────────────── */
+  .form-section { background: var(--blanco); border-radius: var(--radio-lg); box-shadow: var(--sombra); padding: 20px; margin-bottom: 14px; }
+  .form-title {
+    font-size: 16px; font-weight: 800; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px; color: var(--texto);
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--gris-text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--gris-2);
+    border-radius: var(--radio);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--texto);
+    background: var(--gris-1);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--verde);
+    background: var(--blanco);
+  }
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-hint { font-size: 11px; color: var(--gris-text); margin-top: 4px; }
+
+  /* ── BOTONES ─────────────────────────────────────────── */
+  .btn-primary {
+    width: 100%;
+    background: var(--verde);
+    color: var(--blanco);
+    border: none;
+    border-radius: var(--radio);
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary:active { background: var(--verde-med); transform: scale(0.98); }
+  .btn-primary.naranja { background: var(--naranja); }
+  .btn-primary.naranja:active { background: #b85a18; }
+  .btn-primary.azul { background: var(--azul); }
+  .btn-primary.azul:active { background: #155d8e; }
+  .btn-primary.morado { background: var(--morado); }
+  .btn-secondary {
+    width: 100%;
+    background: var(--gris-1);
+    color: var(--texto);
+    border: 1.5px solid var(--gris-2);
+    border-radius: var(--radio);
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 10px;
+  }
+  .btn-secondary:active { background: var(--gris-2); }
+
+  /* ── TOTAL CALCULADO ─────────────────────────────────── */
+  .calc-total {
+    background: var(--verde-claro);
+    border: 1.5px solid var(--verde-borde);
+    border-radius: var(--radio);
+    padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .calc-total-label { font-size: 13px; font-weight: 600; color: var(--verde); }
+  .calc-total-val { font-size: 22px; font-weight: 900; color: var(--verde); letter-spacing: -1px; }
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--texto); color: var(--blanco);
+    padding: 12px 20px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+    opacity: 0; transition: all 0.3s; z-index: 999;
+    max-width: 320px; text-align: center;
+    box-shadow: var(--sombra-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.verde { background: var(--verde); }
+  .toast.rojo  { background: var(--rojo); }
+
+  /* ── LISTA REGISTROS ─────────────────────────────────── */
+  .registro-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--gris-2);
+  }
+  .registro-item:last-child { border-bottom: none; }
+  .reg-icon {
+    width: 40px; height: 40px; border-radius: var(--radio); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .reg-icon.eg  { background: var(--naranja-cl); }
+  .reg-icon.ing { background: var(--verde-claro); }
+  .reg-icon.jor { background: var(--azul-cl); }
+  .reg-body { flex: 1; min-width: 0; }
+  .reg-desc { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .reg-meta { font-size: 12px; color: var(--gris-text); margin-top: 2px; }
+  .reg-val { font-size: 15px; font-weight: 800; white-space: nowrap; }
+  .reg-val.pos { color: var(--verde); }
+  .reg-val.neg { color: var(--naranja); }
+
+  /* ── BOTTOM NAV ──────────────────────────────────────── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: var(--blanco);
+    border-top: 1px solid var(--gris-2);
+    display: flex;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    z-index: 100;
+  }
+  .bnav-item {
+    flex: 1; padding: 10px 4px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; transition: opacity 0.2s;
+    font-size: 10px; font-weight: 600; color: var(--gris-text);
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .bnav-item.active { color: var(--verde); }
+  .bnav-icon { font-size: 22px; line-height: 1; }
+  .bnav-item.active .bnav-icon { filter: drop-shadow(0 0 4px rgba(27,107,58,0.3)); }
+
+  /* ── FAB ─────────────────────────────────────────────── */
+  .fab {
+    position: fixed; bottom: 76px; right: 20px;
+    width: 56px; height: 56px;
+    background: var(--verde);
+    color: white; border: none; border-radius: 50%;
+    font-size: 26px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(27,107,58,0.4);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 98;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(27,107,58,0.3); }
+
+  /* ── MODAL HOJA SHEET ────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; display: none; align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--blanco); border-radius: 24px 24px 0 0;
+    width: 100%; max-height: 90vh; overflow-y: auto;
+    padding: 12px 20px 32px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--gris-3); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; }
+
+  /* ── CONFIG / SETUP ──────────────────────────────────── */
+  .config-card {
+    background: var(--blanco); border-radius: var(--radio-lg);
+    border: 1.5px solid var(--gris-2); padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .config-row { display: flex; justify-content: space-between; align-items: center; }
+  .config-label { font-size: 14px; font-weight: 600; }
+  .config-val { font-size: 14px; color: var(--gris-text); }
+  .config-badge {
+    background: var(--verde-claro); color: var(--verde);
+    padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  }
+
+  /* ── INSTRUCCIONES GOOGLE SHEETS ─────────────────────── */
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--verde); color: white;
+    font-size: 12px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .step-text { font-size: 14px; line-height: 1.5; flex: 1; }
+  .code-block {
+    background: var(--gris-2); border-radius: 8px;
+    padding: 10px 12px; font-family: monospace; font-size: 12px;
+    word-break: break-all; margin: 8px 0;
+    border-left: 3px solid var(--verde);
+  }
+
+  /* ── EMPTY STATE ─────────────────────────────────────── */
+  .empty { text-align: center; padding: 32px 16px; color: var(--gris-text); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* ── SECTION EYEBROW ─────────────────────────────────── */
+  .eyebrow {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--gris-text);
+    margin: 20px 0 10px; padding: 0 2px;
+  }
+
+  /* ── SWITCHES / TOGGLE ───────────────────────────────── */
+  .pill-toggle { display: flex; background: var(--gris-2); border-radius: 10px; padding: 4px; margin-bottom: 18px; }
+  .pill-opt {
+    flex: 1; text-align: center; padding: 8px 4px;
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; color: var(--gris-text); transition: all 0.2s;
+  }
+  .pill-opt.active { background: var(--blanco); color: var(--texto); box-shadow: var(--sombra); }
+
+  /* responsive helper */
+  @media (min-width: 481px) {
+    body { border-left: 1px solid var(--gris-2); border-right: 1px solid var(--gris-2); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-logo">🌿 Raíces del Putumayo</div>
+      <div class="header-sub">Asoc. Agroalimentaria · Vda. Los Nogales · Orito, Putumayo</div>
+    </div>
+    <button class="sync-btn" onclick="syncSheets()">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncTxt">Sincronizar</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════ TABS ══════ -->
+<div class="nav-tabs" id="navTabs">
+  <div class="tab active" data-page="egresos"   onclick="switchPage('egresos')"><span class="tab-icon">💸</span> Gastos</div>
+  <div class="tab" data-page="jornales"  onclick="switchPage('jornales')"><span class="tab-icon">👷</span> Jornales</div>
+  <div class="tab" data-page="ingresos"  onclick="switchPage('ingresos')"><span class="tab-icon">💰</span> Ingresos</div>
+  <div class="tab" data-page="socios"    onclick="switchPage('socios')"><span class="tab-icon">👥</span> Socios</div>
+  <div class="tab" data-page="config"    onclick="switchPage('config')"><span class="tab-icon">⚙️</span> Config</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: DASHBOARD
+══════════════════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+
+  <div class="eyebrow">Resumen general</div>
+
+  <div class="kpi-grid">
+    <div class="kpi ing">
+      <div class="kpi-label">Ingresos</div>
+      <div class="kpi-val" id="kpi-ing">$0</div>
+    </div>
+    <div class="kpi eg">
+      <div class="kpi-label">Egresos</div>
+      <div class="kpi-val" id="kpi-eg">$0</div>
+    </div>
+    <div class="kpi jor">
+      <div class="kpi-label">Jornales</div>
+      <div class="kpi-val" id="kpi-jor">$0</div>
+    </div>
+    <div class="kpi util">
+      <div class="kpi-label">Utilidad</div>
+      <div class="kpi-val" id="kpi-util">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">👥</span> Balance por socio</div>
+    <table class="balance-table">
+      <thead>
+        <tr>
+          <th colspan="2">Socio</th>
+          <th style="text-align:right">Balance</th>
+        </tr>
+      </thead>
+      <tbody id="balanceBody">
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">🕒</span> Últimos movimientos</div>
+    <div id="recentList">
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">Aún no hay registros.<br>Usa los formularios para empezar.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: EGRESOS
+══════════════════════════════════════════════ -->
+<div class="page active" id="page-egresos">
+  <div class="form-section">
+    <div class="form-title">💸 Registrar gasto</div>
+
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-input" id="eg-fecha">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <input type="text" class="form-input" id="eg-desc" placeholder="Ej: Fungicida Mancozeb 5 kg">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Categoría</label>
+      <select class="form-select" id="eg-cat">
+        <option value="">— Seleccionar —</option>
+        <option>Abono orgánico</option>
+        <option>Fertilizante químico</option>
+        <option>Fungicida</option>
+        <option>Herbicida</option>
+        <option>Insecticida</option>
+        <option>Maquinaria - compra</option>
+        <option>Maquinaria - arriendo</option>
+        <option>Herramientas</option>
+        <option>Transporte</option>
+        <option>Mano de obra externa</option>
+        <option>Servicios públicos</option>
+        <option>Combustible</option>
+        <option>Mantenimiento</option>
+        <option>Otros</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Pagado por</label>
+      <select class="form-select" id="eg-socio">
+        <option value="">— Seleccionar socio —</option>
+        <option>Julio Eduardo Rondon Duzan</option>
+        <option>Jhonier Eduardo Rondon Betancur</option>
+        <option>Julio Fernando Rondon Betancur</option>
+        <option>Mallerly Rondon Betancur</option>
+        <option>Nancy Rondon Betancur</option>
+        <option>Jose Dario Rondon Betancur</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Valor ($)</label>
+      <input type="number" class="form-input" id="eg-valor" placeholder="0" min="0" inputmode="numeric">
+      <div class="form-hint">Ingrese el valor en pesos colombianos</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">N° Factura / Soporte (opcional)</label>
+      <input type="text" class="form-input" id="eg-factura" placeholder="FAC-001">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Observaciones (opcional)</label>
+      <input type="text" class="form-input" id="eg-obs" placeholder="Notas adicionales">
+    </div>
+
+    <div class="calc-total" id="eg-preview" style="display:none">
+      <span class="calc-total-label">💸 Total egreso</span>
+      <span class="calc-total-val" id="eg-preview-val">$0</span>
+    </div>
+
+    <button class="btn-primary naranja" onclick="guardarEgreso()">
+      ✓ Guardar gasto
+    </button>
+    <button class="btn-secondary" onclick="limpiarEgreso()">Limpiar formulario</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">📋</span> Gastos registrados</div>
+    <div id="egresosList"><div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Sin egresos aún.</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: JORNALES
+══════════════════════════════════════════════ -->
+<div class="page" id="page-jornales">
+  <div class="form-section">
+    <div class="form-title">👷 Registrar jornal</div>
+
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-input" id="jor-fecha">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nombre del trabajador</label>
+      <input type="text" class="form-input" id="jor-nombre" placeholder="Nombre completo">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Tipo (socio que trabajó)</label>
+      <select class="form-select" id="jor-tipo">
+        <option value="">— Seleccionar socio —</option>
+        <option>Julio Eduardo Rondon Duzan</option>
+        <option>Jhonier Eduardo Rondon Betancur</option>
+        <option>Julio Fernando Rondon Betancur</option>
+        <option>Mallerly Rondon Betancur</option>
+        <option>Nancy Rondon Betancur</option>
+        <option>Jose Dario Rondon Betancur</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Labor realizada</label>
+      <select class="form-select" id="jor-labor">
+        <option value="">— Seleccionar labor —</option>
+        <option>Guadaña</option>
+        <option>Deschuponar</option>
+        <option>Oficios Varios</option>
+        <option>Recolección</option>
+        <option>Fumigación</option>
+        <option>Fertilización</option>
+        <option>Poda</option>
+        <option>Control de malezas</option>
+        <option>Riego</option>
+        <option>Transporte interno</option>
+        <option>Mantenimiento equipos</option>
+        <option>Siembra</option>
+        <option>Otro</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Días trabajados</label>
+        <input type="number" class="form-input" id="jor-dias" placeholder="1" min="0.5" step="0.5" inputmode="decimal" oninput="calcJornal()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor / día ($)</label>
+        <input type="number" class="form-input" id="jor-valdia" placeholder="50000" min="0" inputmode="numeric" oninput="calcJornal()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Observaciones (opcional)</label>
+      <input type="text" class="form-input" id="jor-obs" placeholder="Notas adicionales">
+    </div>
+
+    <div class="calc-total">
+      <span class="calc-total-label">👷 Total jornal</span>
+      <span class="calc-total-val" id="jor-total">$0</span>
+    </div>
+
+    <button class="btn-primary azul" onclick="guardarJornal()">
+      ✓ Guardar jornal
+    </button>
+    <button class="btn-secondary" onclick="limpiarJornal()">Limpiar formulario</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">📋</span> Jornales registrados</div>
+    <div id="jornalesList"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin jornales aún.</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: INGRESOS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-ingresos">
+  <div class="form-section">
+    <div class="form-title">💰 Registrar venta</div>
+
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-input" id="ing-fecha">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Comprador</label>
+      <input type="text" class="form-input" id="ing-comprador" placeholder="Nombre o empresa">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Kg vendidos</label>
+        <input type="number" class="form-input" id="ing-kg" placeholder="0" min="0" inputmode="decimal" oninput="calcVenta()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio / Kg ($)</label>
+        <input type="number" class="form-input" id="ing-precio" placeholder="0" min="0" inputmode="numeric" oninput="calcVenta()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Forma de pago</label>
+      <select class="form-select" id="ing-pago">
+        <option value="">— Seleccionar —</option>
+        <option>Efectivo</option>
+        <option>Transferencia</option>
+        <option>Nequi</option>
+        <option>Daviplata</option>
+        <option>Cheque</option>
+        <option>Crédito</option>
+        <option>Otro</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Observaciones (opcional)</label>
+      <input type="text" class="form-input" id="ing-obs" placeholder="Notas adicionales">
+    </div>
+
+    <div class="calc-total">
+      <span class="calc-total-label">💰 Total venta</span>
+      <span class="calc-total-val" id="ing-total">$0</span>
+    </div>
+
+    <button class="btn-primary" onclick="guardarIngreso()">
+      ✓ Guardar venta
+    </button>
+    <button class="btn-secondary" onclick="limpiarIngreso()">Limpiar formulario</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">📋</span> Ventas registradas</div>
+    <div id="ingresosList"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Sin ventas aún.</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: SOCIOS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-socios">
+  <div class="eyebrow">Balance individual</div>
+  <div id="sociosDetalle"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: CONFIG
+══════════════════════════════════════════════ -->
+<div class="page" id="page-config">
+
+  <div class="eyebrow">Conexión Google Sheets</div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">🔗</span> Configurar Apps Script</div>
+
+    <div style="background:var(--verde-claro);border-radius:10px;padding:12px 14px;margin-bottom:16px;border-left:3px solid var(--verde-med)">
+      <div style="font-size:12px;font-weight:700;color:var(--verde);margin-bottom:4px">📄 Tu Google Sheets</div>
+      <div style="font-size:12px;color:var(--gris-text);word-break:break-all">ID: <strong>1cPogRgjOOw3iH4tNITkqCp5VUGFxRKIcXPF3mF00KDM</strong></div>
+    </div>
+
+    <div class="step-row">
+      <span class="step-num">1</span>
+      <span class="step-text">Abre tu <a href="https://docs.google.com/spreadsheets/d/1cPogRgjOOw3iH4tNITkqCp5VUGFxRKIcXPF3mF00KDM" target="_blank" style="color:var(--verde);font-weight:700">Google Sheets 🔗</a> → menú <strong>Extensiones</strong> → <strong>Apps Script</strong></span>
+    </div>
+    <div class="step-row">
+      <span class="step-num">2</span>
+      <span class="step-text">Borra todo el código existente y pega el script de abajo (sección "Script para copiar")</span>
+    </div>
+    <div class="step-row">
+      <span class="step-num">3</span>
+      <span class="step-text">Guarda con <strong>Ctrl+S</strong> → clic en <strong>Implementar</strong> → <strong>Nueva implementación</strong></span>
+    </div>
+    <div class="step-row">
+      <span class="step-num">4</span>
+      <span class="step-text">Tipo: <strong>Aplicación web</strong> · Ejecutar como: <strong>Yo</strong> · Acceso: <strong>Cualquier persona</strong> → clic <strong>Implementar</strong></span>
+    </div>
+    <div class="step-row">
+      <span class="step-num">5</span>
+      <span class="step-text">Autoriza los permisos → copia la <strong>URL de la aplicación web</strong> y pégala aquí:</span>
+    </div>
+
+    <div class="form-group" style="margin-top:8px">
+      <label class="form-label">URL del Apps Script</label>
+      <input type="url" class="form-input" id="cfg-url" placeholder="https://script.google.com/macros/s/..." oninput="guardarConfig()">
+    </div>
+
+    <div id="cfg-status" style="font-size:13px; color:var(--gris-text); margin-bottom:14px; min-height:18px;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn-primary" onclick="probarConexion()">🔌 Probar conexión</button>
+      <button class="btn-primary" style="background:var(--azul)" onclick="sincronizarPendientes()">🔄 Sincronizar todo</button>
+    </div>
+  </div>
+
+  <div class="eyebrow">Socios registrados</div>
+  <div id="cfgSocios"></div>
+
+  <div class="eyebrow">Datos locales</div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">💾</span> Almacenamiento local</div>
+    <p style="font-size:13px; color:var(--gris-text); margin-bottom:14px;">Los datos se guardan en este dispositivo mientras configuras la conexión a Sheets.</p>
+    <div id="cfg-counts" style="font-size:13px; margin-bottom:16px;"></div>
+    <button class="btn-secondary" style="color:var(--rojo); border-color:var(--rojo);" onclick="confirmarLimpiar()">🗑 Borrar todos los datos locales</button>
+  </div>
+
+  <div class="eyebrow">Script para copiar</div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">📋</span> Apps Script completo</div>
+    <p style="font-size:12px; color:var(--gris-text); margin-bottom:10px;">Copia y pega esto en tu Google Apps Script:</p>
+    <pre id="fullScript" style="font-size:10px; background:var(--gris-1); border-radius:8px; padding:12px; overflow-x:auto; white-space:pre-wrap; line-height:1.6; border-left:3px solid var(--verde);"></pre>
+    <button class="btn-primary" style="margin-top:12px" onclick="copiarScriptFull()">📋 Copiar script</button>
+  </div>
+
+</div>
+
+<!-- ══════ BOTTOM NAV ══════ -->
+<nav class="bottom-nav">
+  <div class="bnav-item active" id="bnav-egresos" onclick="switchPage('egresos')">
+    <span class="bnav-icon">💸</span>Egresos
+  </div>
+  <div class="bnav-item" id="bnav-jornales" onclick="switchPage('jornales')">
+    <span class="bnav-icon">👷</span>Jornales
+  </div>
+  <div class="bnav-item" id="bnav-ingresos" onclick="switchPage('ingresos')">
+    <span class="bnav-icon">💰</span>Ingresos
+  </div>
+  <div class="bnav-item" id="bnav-socios" onclick="switchPage('socios')">
+    <span class="bnav-icon">👥</span>Socios
+  </div>
+</nav>
+
+<!-- ══════ TOAST ══════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════
+const SOCIOS = [
+  { nombre: "Julio Eduardo Rondon Duzan",      initials: "JE", pct: 1/6 },
+  { nombre: "Jhonier Eduardo Rondon Betancur", initials: "JR", pct: 1/6 },
+  { nombre: "Julio Fernando Rondon Betancur",  initials: "JF", pct: 1/6 },
+  { nombre: "Mallerly Rondon Betancur",        initials: "MR", pct: 1/6 },
+  { nombre: "Nancy Rondon Betancur",           initials: "NR", pct: 1/6 },
+  { nombre: "Jose Dario Rondon Betancur",      initials: "JD", pct: 1/6 },
+];
+
+let state = {
+  egresos:  [],
+  jornales: [],
+  ingresos: [],
+  scriptUrl: ''
+};
+
+// Cargar estado guardado
+function loadState() {
+  try {
+    const saved = localStorage.getItem('finca_state');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+  if (!state.egresos)  state.egresos  = [];
+  if (!state.jornales) state.jornales = [];
+  if (!state.ingresos) state.ingresos = [];
+}
+
+function saveState() {
+  localStorage.setItem('finca_state', JSON.stringify(state));
+}
+
+// ══════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const tab = document.querySelector(`.tab[data-page="${page}"]`);
+  if (tab) { tab.classList.add('active'); tab.scrollIntoView({inline:'center',block:'nearest'}); }
+  const bnav = document.getElementById('bnav-' + page);
+  if (bnav) bnav.classList.add('active');
+  if (page === 'socios')    renderSocios();
+  if (page === 'config')    renderConfig();
+}
+
+// ══════════════════════════════════════════════
+// FORMATO
+// ══════════════════════════════════════════════
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-CO');
+}
+function fmtK(n) {
+  if (Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1000)    return '$' + (n/1000).toFixed(0) + 'k';
+  return '$' + Math.round(n);
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  const totIng  = state.ingresos.reduce((s, r) => s + (r.total || 0), 0);
+  const totEg   = state.egresos.reduce((s, r) => s + (r.valor || 0), 0);
+  const totJor  = state.jornales.reduce((s, r) => s + (r.total || 0), 0);
+  const utilidad = totIng - totEg - totJor;
+
+  document.getElementById('kpi-ing').textContent  = fmtK(totIng);
+  document.getElementById('kpi-eg').textContent   = fmtK(totEg);
+  document.getElementById('kpi-jor').textContent  = fmtK(totJor);
+  document.getElementById('kpi-util').textContent = fmtK(utilidad);
+
+  // Balance socios
+  const tbody = document.getElementById('balanceBody');
+  tbody.innerHTML = SOCIOS.map(s => {
+    const aporteDinero  = state.egresos.filter(e => e.socio === s.nombre).reduce((a, e) => a + (e.valor||0), 0);
+    const aporteJornal  = state.jornales.filter(j => j.tipo === s.nombre).reduce((a, j) => a + (j.total||0), 0);
+    const partePago     = state.jornales.filter(j => j.quien_pago === s.nombre).reduce((a, j) => a + (j.total||0), 0);
+    const parteIngresos = totIng * s.pct;
+    const gastoProp     = (totEg + totJor) * s.pct;
+    const balance       = parteIngresos + aporteDinero + aporteJornal - gastoProp;
+    const cls = balance > 0 ? 'balance-pos' : balance < 0 ? 'balance-neg' : 'balance-zero';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="socio-init">${s.initials}</div>
+        <div><div class="socio-name">${s.nombre.split(' ').slice(0,2).join(' ')}</div></div>
+      </div></td>
+      <td style="text-align:right"><span class="${cls}">${fmtK(balance)}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Últimos movimientos
+  const all = [
+    ...state.egresos.map(e  => ({...e, tipo:'eg',  fecha: e.fecha,  label: e.desc,      val: -(e.valor||0) })),
+    ...state.jornales.map(j => ({...j, tipo:'jor', fecha: j.fecha,  label: j.nombre,    val: -(j.total||0) })),
+    ...state.ingresos.map(i => ({...i, tipo:'ing', fecha: i.fecha,  label: i.comprador, val:  (i.total||0) })),
+  ].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 8);
+
+  const icons = { eg:'💸', jor:'👷', ing:'💰' };
+  const div = document.getElementById('recentList');
+  if (!all.length) {
+    div.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aún no hay registros.<br>Usa los formularios para empezar.</div></div>`;
+  } else {
+    div.innerHTML = all.map(r => `
+      <div class="registro-item">
+        <div class="reg-icon ${r.tipo}">${icons[r.tipo]}</div>
+        <div class="reg-body">
+          <div class="reg-desc">${r.label || '—'}</div>
+          <div class="reg-meta">${r.fecha || ''} ${r.cat ? '· '+r.cat : r.labor ? '· '+r.labor : ''}</div>
+        </div>
+        <div class="reg-val ${r.val >= 0 ? 'pos' : 'neg'}">${fmtK(Math.abs(r.val))}</div>
+      </div>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════════
+// EGRESOS
+// ══════════════════════════════════════════════
+document.getElementById('eg-valor').addEventListener('input', function() {
+  const v = parseFloat(this.value) || 0;
+  const prev = document.getElementById('eg-preview');
+  prev.style.display = v > 0 ? 'flex' : 'none';
+  document.getElementById('eg-preview-val').textContent = fmt(v);
+});
+
+function guardarEgreso() {
+  const fecha   = document.getElementById('eg-fecha').value;
+  const desc    = document.getElementById('eg-desc').value.trim();
+  const cat     = document.getElementById('eg-cat').value;
+  const socio   = document.getElementById('eg-socio').value;
+  const valor   = parseFloat(document.getElementById('eg-valor').value) || 0;
+  const factura = document.getElementById('eg-factura').value.trim();
+  const obs     = document.getElementById('eg-obs').value.trim();
+
+  if (!fecha)  return toast('Ingresa la fecha', 'rojo');
+  if (!desc)   return toast('Ingresa una descripción', 'rojo');
+  if (!cat)    return toast('Selecciona una categoría', 'rojo');
+  if (!socio)  return toast('Selecciona quién pagó', 'rojo');
+  if (valor <= 0) return toast('Ingresa un valor mayor a 0', 'rojo');
+
+  const reg = { id: Date.now(), fecha, desc, cat, socio, valor, factura, obs, sincronizado: false };
+  state.egresos.push(reg);
+  saveState();
+  renderListaEgresos();
+  renderDashboard();
+  limpiarEgreso();
+  toast('Egreso guardado ✓', 'verde');
+  enviarASheets('egreso', reg);
+}
+
+function renderListaEgresos() {
+  const div = document.getElementById('egresosList');
+  if (!state.egresos.length) {
+    div.innerHTML = `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Sin egresos aún.</div></div>`;
+    return;
+  }
+  div.innerHTML = [...state.egresos].reverse().map(e => `
+    <div class="registro-item">
+      <div class="reg-icon eg">💸</div>
+      <div class="reg-body">
+        <div class="reg-desc">${e.desc}</div>
+        <div class="reg-meta">${e.fecha} · ${e.cat} · ${e.socio.split(' ')[0]} ${e.socio.split(' ')[1]}</div>
+      </div>
+      <div class="reg-val neg">${fmt(e.valor)}</div>
+    </div>`).join('');
+}
+
+function limpiarEgreso() {
+  ['eg-fecha','eg-desc','eg-cat','eg-socio','eg-valor','eg-factura','eg-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+  });
+  document.getElementById('eg-preview').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════
+// JORNALES
+// ══════════════════════════════════════════════
+function calcJornal() {
+  const dias   = parseFloat(document.getElementById('jor-dias').value) || 0;
+  const valdia = parseFloat(document.getElementById('jor-valdia').value) || 0;
+  document.getElementById('jor-total').textContent = fmt(dias * valdia);
+}
+
+function guardarJornal() {
+  const fecha   = document.getElementById('jor-fecha').value;
+  const nombre  = document.getElementById('jor-nombre').value.trim();
+  const tipo    = document.getElementById('jor-tipo').value;
+  const labor   = document.getElementById('jor-labor').value;
+  const dias    = parseFloat(document.getElementById('jor-dias').value) || 0;
+  const valdia  = parseFloat(document.getElementById('jor-valdia').value) || 0;
+  const quien_pago = '';
+  const obs     = document.getElementById('jor-obs').value.trim();
+  const total   = dias * valdia;
+
+  if (!fecha)  return toast('Ingresa la fecha', 'rojo');
+  if (!nombre) return toast('Ingresa el nombre del trabajador', 'rojo');
+  if (!tipo)   return toast('Selecciona el socio', 'rojo');
+  if (!labor)  return toast('Selecciona la labor', 'rojo');
+  if (dias <= 0)   return toast('Ingresa los días trabajados', 'rojo');
+  if (valdia <= 0) return toast('Ingresa el valor por día', 'rojo');
+
+  const reg = { id: Date.now(), fecha, nombre, tipo, labor, dias, valdia, total, quien_pago, obs, sincronizado: false };
+  state.jornales.push(reg);
+  saveState();
+  renderListaJornales();
+  renderDashboard();
+  limpiarJornal();
+  toast('Jornal guardado ✓', 'verde');
+  enviarASheets('jornal', reg);
+}
+
+function renderListaJornales() {
+  const div = document.getElementById('jornalesList');
+  if (!state.jornales.length) {
+    div.innerHTML = `<div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin jornales aún.</div></div>`;
+    return;
+  }
+  div.innerHTML = [...state.jornales].reverse().map(j => `
+    <div class="registro-item">
+      <div class="reg-icon jor">👷</div>
+      <div class="reg-body">
+        <div class="reg-desc">${j.nombre}</div>
+        <div class="reg-meta">${j.fecha} · ${j.labor} · ${j.dias} día(s)</div>
+      </div>
+      <div class="reg-val neg">${fmt(j.total)}</div>
+    </div>`).join('');
+}
+
+function limpiarJornal() {
+  ['jor-fecha','jor-nombre','jor-tipo','jor-labor','jor-dias','jor-valdia','jor-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+  });
+  document.getElementById('jor-total').textContent = '$0';
+}
+
+// ══════════════════════════════════════════════
+// INGRESOS
+// ══════════════════════════════════════════════
+function calcVenta() {
+  const kg     = parseFloat(document.getElementById('ing-kg').value) || 0;
+  const precio = parseFloat(document.getElementById('ing-precio').value) || 0;
+  document.getElementById('ing-total').textContent = fmt(kg * precio);
+}
+
+function guardarIngreso() {
+  const fecha     = document.getElementById('ing-fecha').value;
+  const comprador = document.getElementById('ing-comprador').value.trim();
+  const kg        = parseFloat(document.getElementById('ing-kg').value) || 0;
+  const precio    = parseFloat(document.getElementById('ing-precio').value) || 0;
+  const pago      = document.getElementById('ing-pago').value;
+  const obs       = document.getElementById('ing-obs').value.trim();
+  const total     = kg * precio;
+
+  if (!fecha)     return toast('Ingresa la fecha', 'rojo');
+  if (!comprador) return toast('Ingresa el comprador', 'rojo');
+  if (kg <= 0)    return toast('Ingresa los kilogramos vendidos', 'rojo');
+  if (precio <= 0) return toast('Ingresa el precio por kg', 'rojo');
+
+  const reg = { id: Date.now(), fecha, comprador, kg, precio, total, pago, obs, sincronizado: false };
+  state.ingresos.push(reg);
+  saveState();
+  renderListaIngresos();
+  renderDashboard();
+  limpiarIngreso();
+  toast('Venta guardada ✓', 'verde');
+  enviarASheets('ingreso', reg);
+}
+
+function renderListaIngresos() {
+  const div = document.getElementById('ingresosList');
+  if (!state.ingresos.length) {
+    div.innerHTML = `<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Sin ventas aún.</div></div>`;
+    return;
+  }
+  div.innerHTML = [...state.ingresos].reverse().map(i => `
+    <div class="registro-item">
+      <div class="reg-icon ing">💰</div>
+      <div class="reg-body">
+        <div class="reg-desc">${i.comprador}</div>
+        <div class="reg-meta">${i.fecha} · ${i.kg} kg · $${i.precio}/kg</div>
+      </div>
+      <div class="reg-val pos">${fmt(i.total)}</div>
+    </div>`).join('');
+}
+
+function limpiarIngreso() {
+  ['ing-fecha','ing-comprador','ing-kg','ing-precio','ing-pago','ing-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+  });
+  document.getElementById('ing-total').textContent = '$0';
+}
+
+// ══════════════════════════════════════════════
+// SOCIOS DETALLE
+// ══════════════════════════════════════════════
+function renderSocios() {
+  const totIng = state.ingresos.reduce((s, r) => s + (r.total || 0), 0);
+  const totEg  = state.egresos.reduce((s, r) => s + (r.valor || 0), 0);
+  const totJor = state.jornales.reduce((s, r) => s + (r.total || 0), 0);
+
+  const div = document.getElementById('sociosDetalle');
+  div.innerHTML = SOCIOS.map(s => {
+    const aporteDinero  = state.egresos.filter(e => e.socio === s.nombre).reduce((a, e) => a + (e.valor||0), 0);
+    const aporteJornal  = state.jornales.filter(j => j.tipo === s.nombre).reduce((a, j) => a + (j.total||0), 0);
+    const parteIngresos = totIng * s.pct;
+    const gastoProp     = (totEg + totJor) * s.pct;
+    const balance       = parteIngresos + aporteDinero + aporteJornal - gastoProp;
+    const pct = Math.round(s.pct * 100);
+    const balColor = balance > 0 ? 'var(--verde)' : balance < 0 ? 'var(--rojo)' : 'var(--gris-text)';
+
+    return `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="socio-init" style="width:44px;height:44px;font-size:15px">${s.initials}</div>
+        <div>
+          <div style="font-weight:800;font-size:15px">${s.nombre}</div>
+          <div style="font-size:12px;color:var(--gris-text)">${pct}% de participación</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--naranja-cl);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:0.4px">Aportes dinero</div>
+          <div style="font-size:16px;font-weight:800;color:var(--naranja);margin-top:2px">${fmtK(aporteDinero)}</div>
+        </div>
+        <div style="background:var(--azul-cl);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:0.4px">Trabajo aportado</div>
+          <div style="font-size:16px;font-weight:800;color:var(--azul);margin-top:2px">${fmtK(aporteJornal)}</div>
+        </div>
+        <div style="background:var(--verde-claro);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;font-weight:700;color:var(--verde);text-transform:uppercase;letter-spacing:0.4px">Parte ingresos</div>
+          <div style="font-size:16px;font-weight:800;color:var(--verde);margin-top:2px">${fmtK(parteIngresos)}</div>
+        </div>
+        <div style="background:var(--morado-cl);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;font-weight:700;color:var(--morado);text-transform:uppercase;letter-spacing:0.4px">Gasto proporcional</div>
+          <div style="font-size:16px;font-weight:800;color:var(--morado);margin-top:2px">${fmtK(gastoProp)}</div>
+        </div>
+      </div>
+      <div style="background:${balance>0?'var(--verde-claro)':balance<0?'var(--rojo-cl)':'var(--gris-1)'};border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:700;color:${balColor}">Balance final</span>
+        <span style="font-size:22px;font-weight:900;color:${balColor};letter-spacing:-1px">${fmt(balance)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+function renderConfig() {
+  // URL guardada
+  const urlInp = document.getElementById('cfg-url');
+  urlInp.value = state.scriptUrl || '';
+
+  // Conteos
+  document.getElementById('cfg-counts').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="text-align:center;background:var(--naranja-cl);border-radius:8px;padding:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--naranja)">${state.egresos.length}</div>
+        <div style="font-size:11px;color:var(--naranja)">Egresos</div>
+      </div>
+      <div style="text-align:center;background:var(--azul-cl);border-radius:8px;padding:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--azul)">${state.jornales.length}</div>
+        <div style="font-size:11px;color:var(--azul)">Jornales</div>
+      </div>
+      <div style="text-align:center;background:var(--verde-claro);border-radius:8px;padding:8px">
+        <div style="font-size:20px;font-weight:800;color:var(--verde)">${state.ingresos.length}</div>
+        <div style="font-size:11px;color:var(--verde)">Ingresos</div>
+      </div>
+    </div>`;
+
+  // Socios
+  document.getElementById('cfgSocios').innerHTML = SOCIOS.map(s => `
+    <div class="config-card">
+      <div class="config-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="socio-init">${s.initials}</div>
+          <span class="config-label">${s.nombre}</span>
+        </div>
+        <span class="config-badge">${Math.round(s.pct*100)}%</span>
+      </div>
+    </div>`).join('');
+
+  // Script
+  document.getElementById('fullScript').textContent = getAppsScript();
+}
+
+function guardarConfig() {
+  state.scriptUrl = document.getElementById('cfg-url').value.trim();
+  saveState();
+}
+
+async function probarConexion() {
+  const url = state.scriptUrl;
+  if (!url) return toast('Pega primero la URL del script', 'rojo');
+  document.getElementById('cfg-status').textContent = '⏳ Probando conexión...';
+  try {
+    const r = await fetch(url + '?action=ping', { mode: 'no-cors' });
+    document.getElementById('cfg-status').textContent = '✅ Conexión establecida';
+    toast('¡Conectado a Google Sheets! ✓', 'verde');
+  } catch(e) {
+    document.getElementById('cfg-status').textContent = '❌ No se pudo conectar. Verifica la URL.';
+    toast('Error de conexión', 'rojo');
+  }
+}
+
+function confirmarLimpiar() {
+  if (confirm('¿Seguro? Esto borrará todos los datos guardados en este dispositivo.')) {
+    state.egresos = []; state.jornales = []; state.ingresos = [];
+    saveState();
+    renderConfig();
+    renderDashboard();
+    ['egresosList','jornalesList','ingresosList'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin registros.</div></div>`;
+    });
+    toast('Datos borrados', 'rojo');
+  }
+}
+
+// ══════════════════════════════════════════════
+// SYNC GOOGLE SHEETS
+// ══════════════════════════════════════════════
+function sincronizarPendientes() { syncSheets(); }
+
+async function syncSheets() {
+  const url = state.scriptUrl;
+  if (!url) {
+    toast('Configura primero el Apps Script en ⚙️ Config', 'rojo');
+    return;
+  }
+  document.getElementById('syncTxt').textContent = 'Enviando...';
+  document.getElementById('syncDot').style.background = '#FFF';
+
+  const pendientes = [
+    ...state.egresos.filter(e => !e.sincronizado).map(e => ({tipo:'egreso', data: e})),
+    ...state.jornales.filter(j => !j.sincronizado).map(j => ({tipo:'jornal', data: j})),
+    ...state.ingresos.filter(i => !i.sincronizado).map(i => ({tipo:'ingreso', data: i})),
+  ];
+
+  if (!pendientes.length) {
+    toast('Todo está sincronizado ✓', 'verde');
+    document.getElementById('syncTxt').textContent = 'Sincronizar';
+    document.getElementById('syncDot').style.background = 'var(--amarillo)';
+    return;
+  }
+
+  let ok = 0;
+  for (const p of pendientes) {
+    const resultado = await enviarASheets(p.tipo, p.data);
+    if (resultado) ok++;
+  }
+
+  document.getElementById('syncTxt').textContent = 'Sincronizar';
+  document.getElementById('syncDot').style.background = ok === pendientes.length ? '#4ade80' : 'var(--amarillo)';
+  toast(`${ok}/${pendientes.length} registros enviados a Sheets`, ok === pendientes.length ? 'verde' : '');
+}
+
+async function enviarASheets(tipo, data) {
+  const url = state.scriptUrl;
+  if (!url) return false;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, ...data })
+    });
+    // Marcar como sincronizado
+    const arr = tipo === 'egreso' ? state.egresos : tipo === 'jornal' ? state.jornales : state.ingresos;
+    const idx = arr.findIndex(r => r.id === data.id);
+    if (idx >= 0) arr[idx].sincronizado = true;
+    saveState();
+    return true;
+  } catch(e) { return false; }
+}
+
+// ══════════════════════════════════════════════
+// APPS SCRIPT
+// ══════════════════════════════════════════════
+function getAppsScript() {
+return `// ══ RAÍCES DEL PUTUMAYO — Apps Script ══
+// Asociación Agroalimentaria · Vda. Los Nogales · Orito, Putumayo
+// Pega este código en Extensions → Apps Script del Sheets vinculado
+// Deploy → New deployment → Web app → Anyone can access
+
+const SPREADSHEET_ID = '1cPogRgjOOw3iH4tNITkqCp5VUGFxRKIcXPF3mF00KDM';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    if (data.tipo === 'egreso') {
+      const ws = ss.getSheetByName('💸 Egresos');
+      // Buscar primera fila vacía a partir de fila 6
+      let nextRow = 6;
+      const vals = ws.getRange('B6:B106').getValues();
+      for (let i = 0; i < vals.length; i++) {
+        if (!vals[i][0]) { nextRow = 6 + i; break; }
+        nextRow = 6 + i + 1;
+      }
+      ws.getRange(nextRow, 2, 1, 7).setValues([[
+        data.fecha, data.desc, data.cat,
+        data.socio, data.valor || 0, data.factura || '', data.obs || ''
+      ]]);
+      // Formato de fecha
+      ws.getRange(nextRow, 2).setNumberFormat('DD/MM/YYYY');
+      // Formato de valor
+      ws.getRange(nextRow, 6).setNumberFormat('$#,##0');
+    }
+
+    if (data.tipo === 'jornal') {
+      const ws = ss.getSheetByName('👷 Jornales');
+      let nextRow = 6;
+      const vals = ws.getRange('B6:B106').getValues();
+      for (let i = 0; i < vals.length; i++) {
+        if (!vals[i][0]) { nextRow = 6 + i; break; }
+        nextRow = 6 + i + 1;
+      }
+      ws.getRange(nextRow, 2, 1, 9).setValues([[
+        data.fecha, data.nombre, data.tipo,
+        data.labor, data.dias || 0, data.valdia || 0,
+        data.total || 0, data.quien_pago || '', data.obs || ''
+      ]]);
+      ws.getRange(nextRow, 2).setNumberFormat('DD/MM/YYYY');
+      ws.getRange(nextRow, 8).setNumberFormat('$#,##0');
+    }
+
+    if (data.tipo === 'ingreso') {
+      const ws = ss.getSheetByName('💰 Ingresos');
+      let nextRow = 6;
+      const vals = ws.getRange('B6:B106').getValues();
+      for (let i = 0; i < vals.length; i++) {
+        if (!vals[i][0]) { nextRow = 6 + i; break; }
+        nextRow = 6 + i + 1;
+      }
+      ws.getRange(nextRow, 2, 1, 7).setValues([[
+        data.fecha, data.comprador, data.kg || 0,
+        data.precio || 0, data.total || 0, data.pago || '', data.obs || ''
+      ]]);
+      ws.getRange(nextRow, 2).setNumberFormat('DD/MM/YYYY');
+      ws.getRange(nextRow, 6).setNumberFormat('$#,##0');
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'error', msg: err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'pong'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+}
+
+function copiarScriptFull() {
+  navigator.clipboard.writeText(getAppsScript())
+    .then(() => toast('Script copiado ✓', 'verde'))
+    .catch(() => toast('Selecciona el texto manualmente', ''));
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function toast(msg, tipo='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + tipo;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = 'toast', 2800);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function init() {
+  loadState();
+
+  // Fecha por defecto = hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  ['eg-fecha','jor-fecha','ing-fecha'].forEach(id => {
+    document.getElementById(id).value = hoy;
+  });
+
+  // Valor jornal por defecto
+  document.getElementById('jor-valdia').value = 50000;
+  calcJornal();
+
+  renderListaEgresos();
+  renderListaJornales();
+  renderListaIngresos();
+  // Arrancar en pestaña Gastos
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const bnavEg = document.getElementById('bnav-egresos');
+  if (bnavEg) bnavEg.classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>
