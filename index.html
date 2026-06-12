@@ -411,6 +411,7 @@
   <div class="tab" data-page="jornales"  onclick="switchPage('jornales')"><span class="tab-icon">👷</span> Jornales</div>
   <div class="tab" data-page="ingresos"  onclick="switchPage('ingresos')"><span class="tab-icon">💰</span> Ingresos</div>
   <div class="tab" data-page="socios"    onclick="switchPage('socios')"><span class="tab-icon">👥</span> Socios</div>
+  <div class="tab" data-page="externos"  onclick="switchPage('externos')"><span class="tab-icon">🧑‍🌾</span> Externos</div>
 
 </div>
 
@@ -569,7 +570,7 @@
       <label class="form-label">Tipo trabajador</label>
       <select class="form-select" id="jor-tipo">
         <option value="">— Seleccionar —</option>
-        <option>Jornalero externo</option>
+        <option>Trabajador Externo</option>
         <option>Julio Eduardo Rondon Duzan</option>
         <option>Jhonier Eduardo Rondon Betancur</option>
         <option>Julio Fernando Rondon Betancur</option>
@@ -608,6 +609,21 @@
         <label class="form-label">Valor / día ($)</label>
         <input type="number" class="form-input" id="jor-valdia" placeholder="50000" min="0" inputmode="numeric" oninput="calcJornal()">
       </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Quien Pagó</label>
+      <select class="form-select" id="jor-pago">
+        <option value="">— Seleccionar —</option>
+        <option>Se debe</option>
+        <option>Julio Eduardo Rondon Duzan</option>
+        <option>Jhonier Eduardo Rondon Betancur</option>
+        <option>Julio Fernando Rondon Betancur</option>
+        <option>Mallerly Rondon Betancur</option>
+        <option>Nancy Rondon Betancur</option>
+        <option>Jose Dario Rondon Betancur</option>
+      </select>
+      <div class="form-hint">"Se debe" = pendiente de pago (jornaleros externos)</div>
     </div>
 
     <div class="form-group">
@@ -702,6 +718,14 @@
 <div class="page" id="page-socios">
   <div class="eyebrow">Resumen por socio</div>
   <div id="sociosDetalle"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PÁGINA: TRABAJADORES EXTERNOS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-externos">
+  <div class="eyebrow">Jornaleros externos</div>
+  <div id="externosDetalle"></div>
 </div>
 
 <!-- Modal detalle socio -->
@@ -852,6 +876,7 @@ function switchPage(page) {
   const bnav = document.getElementById('bnav-' + page);
   if (bnav) bnav.classList.add('active');
   if (page === 'socios')    renderSocios();
+  if (page === 'externos')  renderExternos();
   if (page === 'config')    renderConfig();
 }
 
@@ -1013,16 +1038,17 @@ function guardarJornal() {
   const labor   = document.getElementById('jor-labor').value;
   const dias    = parseFloat(document.getElementById('jor-dias').value) || 0;
   const valdia  = parseFloat(document.getElementById('jor-valdia').value) || 0;
-  const quien_pago = '';
+  const quien_pago = document.getElementById('jor-pago').value;
   const obs     = document.getElementById('jor-obs').value.trim();
   const total   = dias * valdia;
 
   if (!fecha)  return toast('Ingresa la fecha', 'rojo');
   if (!nombre) return toast('Ingresa el nombre del trabajador', 'rojo');
-  if (!tipo)   return toast('Selecciona el socio', 'rojo');
+  if (!tipo)   return toast('Selecciona el tipo de trabajador', 'rojo');
   if (!labor)  return toast('Selecciona la labor', 'rojo');
   if (dias <= 0)   return toast('Ingresa los días trabajados', 'rojo');
   if (valdia <= 0) return toast('Ingresa el valor por día', 'rojo');
+  if (!quien_pago) return toast('Selecciona Quien Pagó (o "Se debe")', 'rojo');
 
   const reg = { id: Date.now(), fecha, nombre, tipo_trab: tipo, labor, dias, valdia, total, quien_pago, obs, sincronizado: false };
   state.jornales.push(reg);
@@ -1052,7 +1078,7 @@ function renderListaJornales() {
 }
 
 function limpiarJornal() {
-  ['jor-fecha','jor-nombre','jor-tipo','jor-labor','jor-dias','jor-valdia','jor-obs'].forEach(id => {
+  ['jor-fecha','jor-nombre','jor-tipo','jor-labor','jor-dias','jor-valdia','jor-pago','jor-obs'].forEach(id => {
     const el = document.getElementById(id);
     if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
   });
@@ -1270,6 +1296,108 @@ function verDetalle(tipo, nombreSocio) {
 function cerrarModal() {
   document.getElementById('modalDetalle').classList.remove('open');
 }
+// ══════════════════════════════════════════════
+// TRABAJADORES EXTERNOS
+// ══════════════════════════════════════════════
+function renderExternos() {
+  const div = document.getElementById('externosDetalle');
+
+  // Filtrar jornales de trabajadores externos
+  const externos = state.jornales.filter(j => j.tipo_trab === 'Trabajador Externo' || j.tipo === 'Trabajador Externo' || j.tipo_trab === 'Jornalero externo' || j.tipo === 'Jornalero externo');
+
+  if (!externos.length) {
+    div.innerHTML = `<div class="card"><div class="empty"><div class="empty-icon">🧑‍🌾</div><div class="empty-text">Sin trabajadores externos registrados.</div></div></div>`;
+    return;
+  }
+
+  // Agrupar por nombre
+  const porNombre = {};
+  externos.forEach(j => {
+    if (!porNombre[j.nombre]) porNombre[j.nombre] = [];
+    porNombre[j.nombre].push(j);
+  });
+
+  div.innerHTML = `
+    <div class="card" style="padding:8px">
+      ${Object.entries(porNombre).map(([nombre, items]) => {
+        const totalDias  = items.reduce((a,j) => a + (Number(j.dias)||0), 0);
+        const totalValor = items.reduce((a,j) => a + (j.total||0), 0);
+        const pendientes = items.filter(j => !j.quien_pago || j.quien_pago === 'Se debe');
+        const estado = pendientes.length > 0 ? 'Se debe' : 'Pagado';
+        const estColor = pendientes.length > 0 ? 'var(--rojo)' : 'var(--verde)';
+        const estBg    = pendientes.length > 0 ? 'var(--rojo-cl)' : 'var(--verde-claro)';
+
+        return `<div class="socio-row" onclick="abrirExterno('${nombre.replace(/'/g, "\\'")}')"
+             style="display:flex;align-items:center;gap:12px;padding:14px 10px;border-bottom:1px solid var(--gris-2);cursor:pointer;transition:background 0.15s"
+             onmouseover="this.style.background='var(--gris-1)'"
+             onmouseout="this.style.background='transparent'">
+          <div class="socio-init" style="width:44px;height:44px;font-size:14px;flex-shrink:0;background:var(--azul-cl);color:var(--azul)">🧑‍🌾</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:14px;line-height:1.3">${nombre}</div>
+            <div style="font-size:11px;color:var(--gris-text);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <span>${totalDias} día(s)</span>
+              <span style="font-weight:700;color:var(--azul)">${fmt(totalValor)}</span>
+              <span style="background:${estBg};color:${estColor};padding:2px 8px;border-radius:10px;font-weight:700;font-size:10px">${estado}</span>
+            </div>
+          </div>
+          <div style="font-size:20px;color:var(--gris-3);flex-shrink:0">›</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--gris-text);margin-top:8px;padding:0 8px">
+      Toca un trabajador para ver el detalle de sus jornales
+    </div>
+  `;
+}
+
+function abrirExterno(nombre) {
+  const items = state.jornales
+    .filter(j => j.nombre === nombre && (j.tipo_trab === 'Trabajador Externo' || j.tipo === 'Trabajador Externo' || j.tipo_trab === 'Jornalero externo' || j.tipo === 'Jornalero externo'))
+    .sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+  const totalDias  = items.reduce((a,j) => a + (Number(j.dias)||0), 0);
+  const totalValor = items.reduce((a,j) => a + (j.total||0), 0);
+
+  document.getElementById('modalTitulo').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="socio-init" style="width:36px;height:36px;font-size:14px;background:var(--azul-cl);color:var(--azul)">🧑‍🌾</div>
+      <div style="font-size:15px;line-height:1.3">${nombre}</div>
+    </div>`;
+
+  document.getElementById('modalContenido').innerHTML = `
+    <div style="background:var(--azul-cl);border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:0.5px">Total general</div>
+        <div style="font-size:22px;font-weight:900;color:var(--azul);letter-spacing:-1px;margin-top:2px">${fmt(totalValor)}</div>
+        <div style="font-size:11px;color:var(--azul);margin-top:1px">${totalDias} día(s) trabajado(s)</div>
+      </div>
+    </div>
+    ${items.map(j => {
+      const pagado = j.quien_pago && j.quien_pago !== 'Se debe';
+      const estado = pagado ? 'Pagado' : 'Se debe';
+      const estColor = pagado ? 'var(--verde)' : 'var(--rojo)';
+      const estBg    = pagado ? 'var(--verde-claro)' : 'var(--rojo-cl)';
+      return `
+        <div style="border-bottom:1px solid var(--gris-2);padding:12px 0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px">${j.labor}</div>
+              <div style="font-size:12px;color:var(--gris-text);margin-top:3px">📅 ${fmtFecha(j.fecha)} &nbsp;·&nbsp; ${j.dias} día(s) × ${fmt(j.valdia)}/día</div>
+              <div style="margin-top:4px">
+                <span style="background:${estBg};color:${estColor};padding:2px 8px;border-radius:10px;font-weight:700;font-size:10px">${estado}</span>
+                ${pagado ? `<span style="font-size:11px;color:var(--gris-text);margin-left:6px">Por: ${j.quien_pago}</span>` : ''}
+              </div>
+              ${j.obs ? `<div style="font-size:11px;color:var(--gris-text);margin-top:4px;font-style:italic">📝 ${j.obs}</div>` : ''}
+            </div>
+            <div style="font-size:16px;font-weight:800;color:var(--azul);margin-left:12px;white-space:nowrap">${fmt(j.total)}</div>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+
+  document.getElementById('modalDetalle').classList.add('open');
+}
+
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
